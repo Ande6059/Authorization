@@ -38,6 +38,8 @@ namespace Authorization
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            
+
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
@@ -55,14 +57,20 @@ namespace Authorization
             }
             ).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireAdminOnly", policy =>
+                        policy.RequireRole("Admin"));
+            });
+
             services.AddDbContext<AuthorizationContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("AuthorizationContext")));
 
-            
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider services)
         {
             if (env.IsDevelopment())
             {
@@ -88,6 +96,25 @@ namespace Authorization
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            CreateUserRole(services).Wait();
+        }
+
+        private async Task CreateUserRole(IServiceProvider serviceProvider)
+        {
+            var RoleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+         
+
+            IdentityResult roleResult;
+            var roleCheck = await RoleManager.RoleExistsAsync("Admin");
+
+            if (!roleCheck)
+            {
+                roleResult = await RoleManager.CreateAsync(new IdentityRole("Admin"));
+            }
+
+           
+
         }
     }
 }

@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Authorization.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Authorization.Controllers
 {
+    [Authorize(Policy = "RequireAdminOnly")]
     public class UsersController : Controller
     {
         private readonly AuthorizationContext _context;
